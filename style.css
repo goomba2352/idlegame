@@ -4,6 +4,10 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
 }
 
 #main-content {
@@ -15,6 +19,8 @@ body {
 
 #gameCanvas {
     border: 1px solid black;
+    width: 400px;
+    height: 400px;
 }
 
 #store {
@@ -26,6 +32,7 @@ body {
     align-items: center;
     height: 400px; /* Match canvas height */
     overflow-y: auto; /* Enable scrolling */
+    box-sizing: border-box;
 }
 
 #charts-container {

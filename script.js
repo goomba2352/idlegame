@@ -32,6 +32,8 @@ window.onload = function() {
 
     const animatedTexts = [];
     const bouncingCircles = []; // Array to hold the bouncing circles
+    let draggedCircle = null;
+    let mouse = { x: 0, y: 0 };
 
     let clickScoreAtLastChartUpdate = 0;
     let autoClickerScoreAtLastChartUpdate = 0;
@@ -197,6 +199,15 @@ window.onload = function() {
             }
         });
 
+        // Draw aiming line
+        if (draggedCircle) {
+            ctx.beginPath();
+            ctx.moveTo(draggedCircle.x, draggedCircle.y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.stroke();
+        }
+
         // Draw animated texts
         const currentTime = performance.now();
         for (let i = animatedTexts.length - 1; i >= 0; i--) {
@@ -253,6 +264,8 @@ window.onload = function() {
         const friction = 0.1 * Math.pow(0.9, reduceFrictionLevel);
 
         bouncingCircles.forEach(circle => {
+            if (circle.isBeingDragged) return;
+
             // Apply friction
             const speed = Math.hypot(circle.dx, circle.dy);
             if (speed > baseSpeed) {
@@ -319,41 +332,100 @@ window.onload = function() {
         requestAnimationFrame(update);
     }
 
-    function handleClick(event) {
+    function handleMouseDown(event) {
         const rect = canvas.getBoundingClientRect();
         const mouseX = event.clientX - rect.left;
         const mouseY = event.clientY - rect.top;
 
-        const dist = Math.hypot(mouseX - mainCircle.x, mouseY - mainCircle.y);
+        for (const circle of bouncingCircles) {
+            const dist = Math.hypot(mouseX - circle.x, mouseY - circle.y);
+            if (dist < circle.radius * 1.5) { // Increased selection radius
+                draggedCircle = circle;
+                draggedCircle.startX = mouseX;
+                draggedCircle.startY = mouseY;
+                draggedCircle.isBeingDragged = false; // Flag to check if a significant drag occurred
+                draggedCircle.prevDx = draggedCircle.dx; // Store current velocity
+                draggedCircle.prevDy = draggedCircle.dy;
+                draggedCircle.dx = 0; // Stop the ball
+                draggedCircle.dy = 0;
 
-        if (dist < mainCircle.radius) {
-            const clickValue = (1 + quantumEntanglements);
-            score += clickValue;
-            totalClickScore += clickValue;
-
-            const now = performance.now();
-            const elapsedTime = now - pulseStartTime;
-
-            if (pulseStartTime > 0 && elapsedTime < pulseDuration) {
-                const pulseProgress = elapsedTime / pulseDuration;
-                if (pulseProgress >= 0.5) { // If shrinking, reverse the animation
-                    const newElapsedTime = pulseDuration - elapsedTime;
-                    pulseStartTime = now - newElapsedTime;
+                if (draggedCircle.charge > 0) {
+                    score += draggedCircle.charge;
+                    totalClickScore += draggedCircle.charge;
+                    animatedTexts.push({
+                        text: `+${draggedCircle.charge.toFixed(0)}`,
+                        x: mouseX,
+                        y: mouseY,
+                        startTime: performance.now(),
+                        duration: 1000
+                    });
                 }
-            } else {
-                pulseStartTime = now; // Start a new animation
+                draggedCircle.charge = 0;
+                break;
             }
+        }
 
-            // Add animated text
-            const xOffset = (Math.random() - 0.5) * 20; // -10 to 10
-            const yOffset = (Math.random() - 0.5) * 20; // -10 to 10
-            animatedTexts.push({
-                text: `+${clickValue.toFixed(0)}`,
-                x: mouseX + xOffset,
-                y: mouseY + yOffset,
-                startTime: performance.now(),
-                duration: 1000 // 1 second
-            });
+        if (!draggedCircle) {
+            const dist = Math.hypot(mouseX - mainCircle.x, mouseY - mainCircle.y);
+            if (dist < mainCircle.radius) {
+                const clickValue = (1 + quantumEntanglements);
+                score += clickValue;
+                totalClickScore += clickValue;
+
+                const now = performance.now();
+                const elapsedTime = now - pulseStartTime;
+
+                if (pulseStartTime > 0 && elapsedTime < pulseDuration) {
+                    const pulseProgress = elapsedTime / pulseDuration;
+                    if (pulseProgress >= 0.5) { // If shrinking, reverse the animation
+                        const newElapsedTime = pulseDuration - elapsedTime;
+                        pulseStartTime = now - newElapsedTime;
+                    }
+                } else {
+                    pulseStartTime = now; // Start a new animation
+                }
+
+                // Add animated text
+                const xOffset = (Math.random() - 0.5) * 20; // -10 to 10
+                const yOffset = (Math.random() - 0.5) * 20; // -10 to 10
+                animatedTexts.push({
+                    text: `+${clickValue.toFixed(0)}`,
+                    x: mouseX + xOffset,
+                    y: mouseY + yOffset,
+                    startTime: performance.now(),
+                    duration: 1000 // 1 second
+                });
+            }
+        }
+    }
+
+    function handleMouseMove(event) {
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = event.clientX - rect.left;
+        mouse.y = event.clientY - rect.top;
+
+        if (draggedCircle && !draggedCircle.isBeingDragged) {
+            const dragDistance = Math.hypot(mouse.x - draggedCircle.startX, mouse.y - draggedCircle.startY);
+            if (dragDistance >= 2) {
+                draggedCircle.isBeingDragged = true;
+            }
+        }
+    }
+
+    function handleMouseUp() {
+        if (draggedCircle) {
+            if (draggedCircle.isBeingDragged) {
+                const angle = Math.atan2(draggedCircle.y - mouse.y, draggedCircle.x - mouse.x);
+                const minSlingshotSpeed = baseSpeed; // Define minimum speed
+                const speed = Math.max(minSlingshotSpeed, Math.min(200, Math.hypot(mouse.x - draggedCircle.x, mouse.y - draggedCircle.y)));
+                draggedCircle.dx = Math.cos(angle) * speed;
+                draggedCircle.dy = Math.sin(angle) * speed;
+            } else {
+                draggedCircle.dx = draggedCircle.prevDx;
+                draggedCircle.dy = draggedCircle.prevDy;
+            }
+            draggedCircle.isBeingDragged = false;
+            draggedCircle = null;
         }
     }
 
@@ -377,7 +449,8 @@ window.onload = function() {
             dy: Math.sin(angle) * baseSpeed,
             color: `hsl(${Math.random() * 360}, 100%, 50%)`,
             lastHitTime: 0,
-            charge: 0
+            charge: 0,
+            isBeingDragged: false
         });
     }
 
@@ -466,7 +539,9 @@ window.onload = function() {
         score += 100000;
     }
 
-    canvas.addEventListener('click', handleClick);
+    canvas.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
     buyAutoClickerButton.addEventListener('click', buyAutoClicker);
     buyQuantumEntanglementButton.addEventListener('click', buyQuantumEntanglement);
     buyBiggerClickButton.addEventListener('click', buyBiggerClick);
