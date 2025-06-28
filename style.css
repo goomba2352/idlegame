@@ -24,6 +24,8 @@ body {
     flex-direction: column;
     gap: 10px;
     align-items: center;
+    height: 400px; /* Match canvas height */
+    overflow-y: auto; /* Enable scrolling */
 }
 
 #charts-container {
@@ -41,4 +43,8 @@ body {
     width: 100%;
     max-height: 200px; /* Limit chart height */
     height: auto;
+}
+
+canvas {
+    background-color: #f0f0f0;
 }

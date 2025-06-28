@@ -14,6 +14,9 @@ window.onload = function() {
     const buyMaxChargeButton = document.getElementById('buyMaxCharge');
     const maxChargeLevelDisplay = document.getElementById('maxChargeLevel');
     const maxChargeCostDisplay = document.getElementById('maxChargeCost');
+    const buyReduceFrictionButton = document.getElementById('buyReduceFriction');
+    const reduceFrictionLevelDisplay = document.getElementById('reduceFrictionLevel');
+    const reduceFrictionCostDisplay = document.getElementById('reduceFrictionCost');
     const scoreChartCanvas = document.getElementById('scoreChart').getContext('2d');
     const rateChartCanvas = document.getElementById('rateChart').getContext('2d');
     const sourceChartCanvas = document.getElementById('sourceChart').getContext('2d');
@@ -23,6 +26,7 @@ window.onload = function() {
     let quantumEntanglements = 0;
     let biggerClickLevel = 0;
     let maxChargeLevel = 0;
+    let reduceFrictionLevel = 0;
     let lastUpdateTime = 0;
     let pulseStartTime = 0;
 
@@ -43,6 +47,7 @@ window.onload = function() {
     };
 
     const pulseDuration = 200; // Base pulse duration in milliseconds
+    const baseSpeed = 100;
 
     const scoreChart = new Chart(scoreChartCanvas, {
         type: 'line',
@@ -160,6 +165,10 @@ window.onload = function() {
         return Math.ceil(150 * Math.pow(1.6, maxChargeLevel));
     }
 
+    function getReduceFrictionCost() {
+        return Math.ceil(200 * Math.pow(1.7, reduceFrictionLevel));
+    }
+
     function draw(scaledRadius) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -224,9 +233,11 @@ window.onload = function() {
         // Calculate button scaling
         const biggerClickAmount = 0.2 + (biggerClickLevel * 0.05);
         let scale = 1;
+        let isPulsing = false;
         if (pulseStartTime > 0) {
             const elapsedTime = now - pulseStartTime;
             if (elapsedTime < pulseDuration) {
+                isPulsing = true;
                 const pulseProgress = elapsedTime / pulseDuration;
                 if (pulseProgress < 0.5) {
                     scale = 1 + biggerClickAmount * (pulseProgress * 2);
@@ -239,8 +250,17 @@ window.onload = function() {
         }
 
         const scaledRadius = mainCircle.radius * scale;
+        const friction = 0.1 * Math.pow(0.9, reduceFrictionLevel);
 
         bouncingCircles.forEach(circle => {
+            // Apply friction
+            const speed = Math.hypot(circle.dx, circle.dy);
+            if (speed > baseSpeed) {
+                const newSpeed = speed * (1 - friction * deltaSeconds);
+                circle.dx *= (newSpeed / speed);
+                circle.dy *= (newSpeed / speed);
+            }
+
             // Move the circle
             circle.x += circle.dx * deltaSeconds;
             circle.y += circle.dy * deltaSeconds;
@@ -271,6 +291,13 @@ window.onload = function() {
             ) {
                 circle.lastHitTime = now;
 
+                if (isPulsing) {
+                    const angle = Math.atan2(circle.y - mainCircle.y, circle.x - mainCircle.x);
+                    const impactSpeed = 200; // Speed boost
+                    circle.dx = Math.cos(angle) * impactSpeed;
+                    circle.dy = Math.sin(angle) * impactSpeed;
+                }
+
                 if (circle.charge > 0) {
                     const autoClickValue = circle.charge;
                     score += autoClickValue;
@@ -280,9 +307,9 @@ window.onload = function() {
 
                 // Bounce off the main circle
                 const angle = Math.atan2(circle.y - mainCircle.y, circle.x - mainCircle.x);
-                const speed = Math.hypot(circle.dx, circle.dy);
-                circle.dx = Math.cos(angle) * speed;
-                circle.dy = Math.sin(angle) * speed;
+                const currentSpeed = Math.hypot(circle.dx, circle.dy);
+                circle.dx = Math.cos(angle) * currentSpeed;
+                circle.dy = Math.sin(angle) * currentSpeed;
             }
         });
 
@@ -340,15 +367,14 @@ window.onload = function() {
             y = Math.random() * (canvas.height - radius * 2) + radius;
         } while (Math.hypot(x - mainCircle.x, y - mainCircle.y) < mainCircle.radius + radius);
 
-        const speed = 100; // pixels per second
         const angle = Math.random() * 2 * Math.PI;
 
         bouncingCircles.push({
             x: x,
             y: y,
             radius: radius,
-            dx: Math.cos(angle) * speed,
-            dy: Math.sin(angle) * speed,
+            dx: Math.cos(angle) * baseSpeed,
+            dy: Math.sin(angle) * baseSpeed,
             color: `hsl(${Math.random() * 360}, 100%, 50%)`,
             lastHitTime: 0,
             charge: 0
@@ -396,6 +422,16 @@ window.onload = function() {
         }
     }
 
+    function buyReduceFriction() {
+        const cost = getReduceFrictionCost();
+        if (score >= cost) {
+            score -= cost;
+            reduceFrictionLevel++;
+            reduceFrictionLevelDisplay.textContent = reduceFrictionLevel;
+            reduceFrictionCostDisplay.textContent = getReduceFrictionCost();
+        }
+    }
+
     function updateCharts() {
         const currentTime = Math.floor(performance.now() / 1000);
 
@@ -435,6 +471,7 @@ window.onload = function() {
     buyQuantumEntanglementButton.addEventListener('click', buyQuantumEntanglement);
     buyBiggerClickButton.addEventListener('click', buyBiggerClick);
     buyMaxChargeButton.addEventListener('click', buyMaxCharge);
+    buyReduceFrictionButton.addEventListener('click', buyReduceFriction);
 
     setInterval(updateCharts, 1000);
 
