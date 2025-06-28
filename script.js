@@ -20,6 +20,7 @@ window.onload = function() {
     const pulseDuration = 200; // Pulse duration in milliseconds
 
     const animatedTexts = [];
+    const bouncingBoxes = []; // Array to hold the bouncing boxes
 
     let clickScoreAtLastChartUpdate = 0;
     let autoClickerScoreAtLastChartUpdate = 0;
@@ -169,6 +170,12 @@ window.onload = function() {
         ctx.fillStyle = button.color;
         ctx.fillRect(x, y, scaledWidth, scaledHeight);
 
+        // Draw bouncing boxes
+        bouncingBoxes.forEach(box => {
+            ctx.fillStyle = box.color;
+            ctx.fillRect(box.x, box.y, box.width, box.height);
+        });
+
         // Draw animated texts
         const currentTime = performance.now();
         for (let i = animatedTexts.length - 1; i >= 0; i--) {
@@ -199,9 +206,54 @@ window.onload = function() {
         const deltaTime = timestamp - lastUpdateTime;
         lastUpdateTime = timestamp;
 
-        const autoClickerGain = autoClickers * (deltaTime / 1000);
-        score += autoClickerGain;
-        totalAutoClickerScore += autoClickerGain;
+        const now = performance.now();
+        const deltaSeconds = deltaTime / 1000;
+
+        bouncingBoxes.forEach(box => {
+            // Move the box
+            box.x += box.dx * deltaSeconds;
+            box.y += box.dy * deltaSeconds;
+
+            // Wall collision
+            if (box.x <= 0 || box.x + box.width >= canvas.width) {
+                box.dx = -box.dx;
+                if (box.x <= 0) box.x = 0;
+                if (box.x + box.width >= canvas.width) box.x = canvas.width - box.width;
+            }
+            if (box.y <= 0 || box.y + box.height >= canvas.height) {
+                box.dy = -box.dy;
+                if (box.y <= 0) box.y = 0;
+                if (box.y + box.height >= canvas.height) box.y = canvas.height - box.height;
+            }
+
+            // Main button collision
+            if (
+                now - box.lastHitTime > 500 && // Cooldown of 500ms
+                box.x < button.x + button.width &&
+                box.x + box.width > button.x &&
+                box.y < button.y + button.height &&
+                box.y + box.height > button.y
+            ) {
+                box.lastHitTime = now;
+                const autoClickValue = 1; // Each hit is worth 1 point
+                score += autoClickValue;
+                totalAutoClickerScore += autoClickValue;
+
+                // Bounce off the main button
+                const overlapX = (box.x + box.width / 2) - (button.x + button.width / 2);
+                const overlapY = (box.y + box.height / 2) - (button.y + button.height / 2);
+                const combinedHalfWidths = (box.width + button.width) / 2;
+                const combinedHalfHeights = (box.height + button.height) / 2;
+
+                if (Math.abs(overlapX) / combinedHalfWidths > Math.abs(overlapY) / combinedHalfHeights) {
+                    box.dx = -box.dx;
+                    box.x += (overlapX > 0 ? 1 : -1);
+                } else {
+                    box.dy = -box.dy;
+                    box.y += (overlapY > 0 ? 1 : -1);
+                }
+            }
+        });
 
         scoreDisplay.textContent = `Score: ${score.toFixed(1)}`;
 
@@ -238,6 +290,37 @@ window.onload = function() {
         }
     }
 
+    function createBouncingBox() {
+        const boxSize = 20;
+        let x = Math.random() * (canvas.width - boxSize);
+        let y = Math.random() * (canvas.height - boxSize);
+
+        // Ensure they don't spawn inside the main button
+        while (
+            x < button.x + button.width &&
+            x + boxSize > button.x &&
+            y < button.y + button.height &&
+            y + boxSize > button.y
+        ) {
+            x = Math.random() * (canvas.width - boxSize);
+            y = Math.random() * (canvas.height - boxSize);
+        }
+
+        const speed = 100; // pixels per second
+        const angle = Math.random() * 2 * Math.PI;
+
+        bouncingBoxes.push({
+            x: x,
+            y: y,
+            width: boxSize,
+            height: boxSize,
+            dx: Math.cos(angle) * speed,
+            dy: Math.sin(angle) * speed,
+            color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+            lastHitTime: 0
+        });
+    }
+
     function buyAutoClicker() {
         const cost = getAutoClickerCost();
         if (score >= cost) {
@@ -245,6 +328,7 @@ window.onload = function() {
             autoClickers++;
             autoClickerCountDisplay.textContent = autoClickers;
             autoClickerCostDisplay.textContent = getAutoClickerCost();
+            createBouncingBox();
         }
     }
 
