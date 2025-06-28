@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idle Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Idle Game</h1>
+    <h2 id="score">Score: 0</h2>
+    <div id="main-content">
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+        <div id="store">
+            <h2>Store</h2>
+            <button id="buyAutoClicker">Buy Auto-Clicker (Cost: <span id="autoClickerCost">10</span>)</button>
+            <p>Auto-Clickers: <span id="autoClickerCount">0</span></p>
+            <button id="buyQuantumEntanglement">Buy Quantum Entanglement (Cost: <span id="quantumEntanglementCost">500</span>)</button>
+            <p>Quantum Entanglements: <span id="quantumEntanglementCount">0</span></p>
+        </div>
+    </div>
+
+    <div id="charts-container">
+        <canvas id="scoreChart" width="400" height="200"></canvas>
+        <canvas id="rateChart" width="400" height="200"></canvas>
+        <canvas id="sourceChart" width="400" height="200"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
