@@ -2,9 +2,9 @@ window.onload = function() {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const scoreDisplay = document.getElementById('score');
-    const buyAutoClickerButton = document.getElementById('buyAutoClicker');
-    const autoClickerCountDisplay = document.getElementById('autoClickerCount');
-    const autoClickerCostDisplay = document.getElementById('autoClickerCost');
+    const buyBouncyBallButton = document.getElementById('buyBouncyBall');
+    const bouncyBallCountDisplay = document.getElementById('bouncyBallCount');
+    const bouncyBallCostDisplay = document.getElementById('bouncyBallCost');
     const buyQuantumEntanglementButton = document.getElementById('buyQuantumEntanglement');
     const quantumEntanglementCountDisplay = document.getElementById('quantumEntanglementCount');
     const quantumEntanglementCostDisplay = document.getElementById('quantumEntanglementCost');
@@ -22,7 +22,7 @@ window.onload = function() {
     const sourceChartCanvas = document.getElementById('sourceChart').getContext('2d');
 
     let score = 0;
-    let autoClickers = 0;
+    let bouncyBalls = 0;
     let quantumEntanglements = 0;
     let biggerClickLevel = 0;
     let maxChargeLevel = 0;
@@ -36,10 +36,10 @@ window.onload = function() {
     let mouse = { x: 0, y: 0 };
 
     let clickScoreAtLastChartUpdate = 0;
-    let autoClickerScoreAtLastChartUpdate = 0;
+    let bouncyBallScoreAtLastChartUpdate = 0;
     let scoreAtLastChartUpdate = 0;
     let totalClickScore = 0;
-    let totalAutoClickerScore = 0;
+    let totalBouncyBallScore = 0;
 
     const mainCircle = {
         x: 200,
@@ -70,7 +70,7 @@ window.onload = function() {
                 fill: false,
                 pointRadius: 0
             }, {
-                label: 'Score from Auto-Clickers',
+                label: 'Score from Bouncy-Balls',
                 data: [],
                 borderColor: 'purple',
                 borderWidth: 1,
@@ -108,7 +108,7 @@ window.onload = function() {
                 fill: false,
                 pointRadius: 0
             }, {
-                label: 'Auto-Clicker Rate',
+                label: 'Bouncy-Ball Rate',
                 data: [],
                 borderColor: 'purple',
                 borderWidth: 1,
@@ -151,8 +151,8 @@ window.onload = function() {
         }
     });
 
-    function getAutoClickerCost() {
-        return Math.ceil(10 * Math.pow(1.1, autoClickers));
+    function getBouncyBallCost() {
+        return Math.ceil(10 * Math.pow(1.1, bouncyBalls));
     }
 
     function getQuantumEntanglementCost() {
@@ -314,7 +314,7 @@ window.onload = function() {
                 if (circle.charge > 0) {
                     const autoClickValue = circle.charge;
                     score += autoClickValue;
-                    totalAutoClickerScore += autoClickValue;
+                    totalBouncyBallScore += autoClickValue;
                     circle.charge = 0;
                 }
 
@@ -454,13 +454,13 @@ window.onload = function() {
         });
     }
 
-    function buyAutoClicker() {
-        const cost = getAutoClickerCost();
+    function buyBouncyBall() {
+        const cost = getBouncyBallCost();
         if (score >= cost) {
             score -= cost;
-            autoClickers++;
-            autoClickerCountDisplay.textContent = autoClickers;
-            autoClickerCostDisplay.textContent = getAutoClickerCost();
+            bouncyBalls++;
+            bouncyBallCountDisplay.textContent = bouncyBalls;
+            bouncyBallCostDisplay.textContent = getBouncyBallCost();
             createBouncingCircle();
         }
     }
@@ -512,26 +512,26 @@ window.onload = function() {
         scoreChart.data.labels.push(currentTime);
         scoreChart.data.datasets[0].data.push(score);
         scoreChart.data.datasets[1].data.push(totalClickScore);
-        scoreChart.data.datasets[2].data.push(totalAutoClickerScore);
+        scoreChart.data.datasets[2].data.push(totalBouncyBallScore);
         scoreChart.update();
 
         // Rate of increase chart
         const clickIncrease = totalClickScore - clickScoreAtLastChartUpdate;
-        const autoClickerIncrease = totalAutoClickerScore - autoClickerScoreAtLastChartUpdate;
+        const bouncyBallIncrease = totalBouncyBallScore - bouncyBallScoreAtLastChartUpdate;
         const scoreIncrease = (score - scoreAtLastChartUpdate); // Total score increase
         scoreAtLastChartUpdate = score;
         clickScoreAtLastChartUpdate = totalClickScore;
-        autoClickerScoreAtLastChartUpdate = totalAutoClickerScore;
+        bouncyBallScoreAtLastChartUpdate = totalBouncyBallScore;
 
         rateChart.data.labels.push(currentTime);
         rateChart.data.datasets[0].data.push(scoreIncrease);
         rateChart.data.datasets[1].data.push(clickIncrease);
-        rateChart.data.datasets[2].data.push(autoClickerIncrease);
+        rateChart.data.datasets[2].data.push(bouncyBallIncrease);
         rateChart.update();
 
         // Score source chart
         sourceChart.data.datasets[0].data[0] = totalClickScore;
-        sourceChart.data.datasets[0].data[1] = totalAutoClickerScore;
+        sourceChart.data.datasets[0].data[1] = totalBouncyBallScore;
         sourceChart.update();
     }
 
@@ -542,7 +542,7 @@ window.onload = function() {
     canvas.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
-    buyAutoClickerButton.addEventListener('click', buyAutoClicker);
+    buyBouncyBallButton.addEventListener('click', buyBouncyBall);
     buyQuantumEntanglementButton.addEventListener('click', buyQuantumEntanglement);
     buyBiggerClickButton.addEventListener('click', buyBiggerClick);
     buyMaxChargeButton.addEventListener('click', buyMaxCharge);
