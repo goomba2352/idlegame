@@ -1,3 +1,5 @@
-This README is AI-generated.
+This Game is mostly AI-generated.
 
-To test the game in your browser, open this link: [Idle Game](https://raw.githubusercontent.com/goomba2352/idlegame/index.html)
+Trying out Gemini CLI.
+
+To test the game in your browser, open this link: [Idle Game](https://html-preview.github.io/?url=https://github.com/goomba2352/idlegame/blob/main/index.html)
