@@ -377,9 +377,30 @@ window.onload = function() {
         if (!draggedCircle) {
             const dist = Math.hypot(mouseX - mainCircle.x, mouseY - mainCircle.y);
             if (dist < mainCircle.radius) {
-                const clickValue = (1 + quantumEntanglements);
-                score += clickValue;
-                totalClickScore += clickValue;
+                let clickPoints = 1; // Start with 1 point for the click
+                if (bouncingCircles.length > 0) {
+                    for (let i = 0; i < quantumEntanglements; i++) {
+                        const randomIndex = Math.floor(Math.random() * bouncingCircles.length);
+                        const randomBall = bouncingCircles[randomIndex];
+                        if (randomBall.charge > 0) {
+                            randomBall.charge--;
+                            clickPoints++;
+                        }
+                    }
+                }
+
+                score += clickPoints;
+                totalClickScore += clickPoints;
+                // Add animated text
+                const xOffset = (Math.random() - 0.5) * 20; // -10 to 10
+                const yOffset = (Math.random() - 0.5) * 20; // -10 to 10
+                animatedTexts.push({
+                    text: `+${clickPoints.toFixed(0)}`,
+                    x: mouseX + xOffset,
+                    y: mouseY + yOffset,
+                    startTime: performance.now(),
+                    duration: 1000 // 1 second
+                });
 
                 const now = performance.now();
                 const elapsedTime = now - pulseStartTime;
@@ -393,17 +414,6 @@ window.onload = function() {
                 } else {
                     pulseStartTime = now; // Start a new animation
                 }
-
-                // Add animated text
-                const xOffset = (Math.random() - 0.5) * 20; // -10 to 10
-                const yOffset = (Math.random() - 0.5) * 20; // -10 to 10
-                animatedTexts.push({
-                    text: `+${clickValue.toFixed(0)}`,
-                    x: mouseX + xOffset,
-                    y: mouseY + yOffset,
-                    startTime: performance.now(),
-                    duration: 1000 // 1 second
-                });
             }
         }
     }
