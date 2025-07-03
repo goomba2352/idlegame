@@ -52,7 +52,7 @@ window.onload = function() {
         color: 'blue'
     };
 
-    const pulseDuration = 200; // Base pulse duration in milliseconds
+    let pulseDuration = 200; // Base pulse duration in milliseconds
     const baseSpeed = 100;
 
     const scoreChart = new Chart(scoreChartCanvas, {
@@ -250,7 +250,7 @@ window.onload = function() {
         const deltaSeconds = deltaTime / 1000;
 
         // Calculate button scaling
-        const biggerClickAmount = 0.2 + (biggerClickLevel * 0.05);
+        const biggerClickAmount = 0.2 + (biggerClickLevel * 0.15);
         let scale = 1;
         let isPulsing = false;
         if (pulseStartTime > 0) {
@@ -258,11 +258,8 @@ window.onload = function() {
             if (elapsedTime < pulseDuration) {
                 isPulsing = true;
                 const pulseProgress = elapsedTime / pulseDuration;
-                if (pulseProgress < 0.5) {
-                    scale = 1 + biggerClickAmount * (pulseProgress * 2);
-                } else {
-                    scale = (1 + biggerClickAmount) - biggerClickAmount * ((pulseProgress - 0.5) * 2);
-                }
+                const pulseAmount = Math.sin(pulseProgress * Math.PI);
+                scale = 1 + biggerClickAmount * pulseAmount;
             } else {
                 pulseStartTime = 0; // End pulse
             }
@@ -502,6 +499,7 @@ window.onload = function() {
             biggerClickLevel++;
             biggerClickLevelDisplay.textContent = biggerClickLevel;
             biggerClickCostDisplay.textContent = getBiggerClickCost();
+            pulseDuration = 200 + (biggerClickLevel * 20);
         }
     }
 
